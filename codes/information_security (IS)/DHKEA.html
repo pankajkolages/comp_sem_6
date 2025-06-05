@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Diffie-Hellman Key Exchange</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      color: #007bff;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #result {
+      margin-top: 15px;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Diffie-Hellman Key Exchange</h2>
+    <label for="pKey">Enter P Value:</label>
+    <input type="number" id="pKey" required>
+
+    <label for="gKey">Enter G Value:</label>
+    <input type="number" id="gKey" required>
+
+    <label for="alicePrivateKey">Alice's Private Key:</label>
+    <input type="number" id="alicePrivateKey" required>
+
+    <label for="bobPrivateKey">Bob's Private Key:</label>
+    <input type="number" id="bobPrivateKey" required>
+
+    <button onclick="exchangeKeys()">Exchange Keys</button>
+
+    <p>Alice's Public Key: <span id="alicePublicKey"></span></p>
+    <p>Bob's Public Key: <span id="bobPublicKey"></span></p>
+    <p>Alice's Shared Secret: <span id="sharedSecretAlice"></span></p>
+    <p>Bob's Shared Secret: <span id="sharedSecretBob"></span></p>
+    <p id="result"></p>
+  </div>
+
+  <script>
+    function modExp(base, exponent, mod) {
+      let result = 1;
+      base = base % mod;
+      while (exponent > 0) {
+        if (exponent % 2 === 1) {
+          result = (result * base) % mod;
+        }
+        exponent = Math.floor(exponent / 2);
+        base = (base * base) % mod;
+      }
+      return result;
+    }
+
+    function isPrimitiveRoot(p, g) {
+      if (p <= 1 || g <= 1 || g >= p) return false;
+      let remainders = new Set();
+      for (let k = 1; k < p; k++) {
+        let remainder = modExp(g, k, p);
+        if (remainders.has(remainder)) return false;
+        remainders.add(remainder);
+      }
+      return true;
+    }
+
+    function exchangeKeys() {
+      const p = parseInt(document.getElementById("pKey").value);
+      const g = parseInt(document.getElementById("gKey").value);
+      const alicePrivateKey = parseInt(document.getElementById("alicePrivateKey").value);
+      const bobPrivateKey = parseInt(document.getElementById("bobPrivateKey").value);
+
+      if (!isPrimitiveRoot(p, g)) {
+        document.getElementById("result").textContent = "G is not a primitive root of P.";
+        return;
+      }
+
+      const alicePublicKey = modExp(g, alicePrivateKey, p);
+      const bobPublicKey = modExp(g, bobPrivateKey, p);
+
+      document.getElementById("alicePublicKey").textContent = alicePublicKey;
+      document.getElementById("bobPublicKey").textContent = bobPublicKey;
+
+      const sharedSecretAlice = modExp(bobPublicKey, alicePrivateKey, p);
+      const sharedSecretBob = modExp(alicePublicKey, bobPrivateKey, p);
+
+      document.getElementById("sharedSecretAlice").textContent = sharedSecretAlice;
+      document.getElementById("sharedSecretBob").textContent = sharedSecretBob;
+
+      if (sharedSecretAlice === sharedSecretBob) {
+        document.getElementById("result").textContent = "The shared secrets match! Key exchange successful.";
+      } else {
+        document.getElementById("result").textContent = "Something went wrong. The shared secrets do not match.";
+      }
+    }
+  </script>
+</body>
+</html>
+
+
+
